@@ -1,13 +1,14 @@
 import { Javascript } from '@/Constant';
-import { useSession } from 'next-auth/react';
 import React from 'react';
+import { useAppSelector } from '@/Redux/ReduxStore';
 
 const SideBarProfile = () => {
-  const { data: session } = useSession();
+  const user = useAppSelector((state) => state.auth.user);
+  const displayName = user?.username ?? user?.email ?? user?.id ?? 'User';
   return (
     <div className='sidebar-user text-center'>
       <a href={Javascript}>
-        <h6 className='mt-3 f-14 f-w-600'>{session?.user?.name || 'C360 Administrator'}</h6>
+        <h6 className='mt-3 f-14 f-w-600'>{displayName}</h6>
       </a>
       <p className='mb-0 font-roboto'>Internet Banking</p>
       <ul>

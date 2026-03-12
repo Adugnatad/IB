@@ -1,0 +1,248 @@
+/** Contract form: circular primary-colored checkbox (e.g. Auto activate) - force visible, same as Active only */
+.contract-auto-activate {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  cursor: pointer;
+  .form-check-label {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 0;
+    cursor: pointer;
+    gap: 0.4rem;
+    color: $primary-color;
+    font-weight: 500;
+  }
+  input.form-check-input[type="checkbox"] {
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    min-width: 1.15rem !important;
+    min-height: 1.15rem !important;
+    border-radius: 50% !important;
+    border: 2px solid $primary-color !important;
+    background-color: $white !important;
+    cursor: pointer;
+    margin: 0 !important;
+    vertical-align: middle;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    flex-shrink: 0;
+    float: none !important;
+    &:checked {
+      background-color: $primary-color !important;
+      border-color: $primary-color !important;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e") !important;
+    }
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+    }
+  }
+}
+
+/** Contracts table: Active only filter - checkbox visible on white, inline centered with label */
+.contracts-table-wrapper .contract-active-only-filter {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0;
+  cursor: pointer;
+  gap: 0.4rem;
+  color: $primary-color;
+  font-weight: 600;
+  line-height: 1;
+  .form-check-input {
+    width: 1.15rem;
+    height: 1.15rem;
+    min-width: 1.15rem;
+    min-height: 1.15rem;
+    border-radius: 50%;
+    border: 2px solid $primary-color;
+    background-color: $white;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+    appearance: none;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+    align-self: center;
+    float: none;
+    &:checked {
+      background-color: $primary-color;
+      border-color: $primary-color;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e");
+    }
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+    }
+  }
+  span {
+    line-height: 1.15rem;
+    display: inline-block;
+  }
+}
+
+/** Contracts table: status dropdown - default (white) background, primary border/focus, option hover/active */
+.contracts-table-wrapper .contract-status-dropdown {
+  .dropdown-toggle.contract-status-filter {
+    background-color: $white !important;
+    background-image: none !important;
+    border: 1px solid rgba($primary-color, 0.4);
+    color: $theme-body-font-color !important;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    min-height: 31px;
+    &:hover {
+      background-color: $light-gray !important;
+      background-image: none !important;
+      border-color: $primary-color;
+      color: $theme-body-font-color !important;
+    }
+    &:focus {
+      background-color: $white !important;
+      background-image: none !important;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+    }
+    &::after {
+      margin-left: 0.5em;
+    }
+  }
+  .dropdown-menu .dropdown-item {
+    &:hover,
+    &:focus {
+      background-color: rgba($primary-color, 0.15);
+      color: $primary-color;
+    }
+    &.active {
+      background-color: $primary-color;
+      color: $white;
+    }
+  }
+}
+
+/** Contracts table: per-page dropdown - primary focus for consistency */
+.contracts-table-wrapper .contract-per-page-filter {
+  &:focus {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+  }
+}
+
+/** Contracts table: dark theme – status dropdown, global search, per-page, labels */
+.dark-only .contracts-table-wrapper,
+.dark-sidebar .contracts-table-wrapper,
+body.dark-only .contracts-table-wrapper,
+body.dark-sidebar .contracts-table-wrapper {
+  /* Status dropdown toggle – dark background, light text and caret */
+  .contract-status-dropdown .dropdown-toggle.contract-status-filter {
+    background-color: $dark-card-background !important;
+    background-image: none !important;
+    border-color: $dark-card-border;
+    color: $dark-all-font-color !important;
+    &:hover {
+      background-color: $dark-card-inbox !important;
+      background-image: none !important;
+      border-color: $dark-card-border;
+      color: $dark-all-font-color !important;
+    }
+    &:focus {
+      background-color: $dark-card-background !important;
+      background-image: none !important;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+    }
+    &::after {
+      border-top-color: $dark-all-font-color;
+    }
+  }
+  /* Status dropdown menu – dark panel */
+  .contract-status-dropdown .dropdown-menu {
+    background-color: $dark-card-background;
+    border: 1px solid $dark-card-border;
+    .dropdown-item {
+      color: $dark-all-font-color;
+      &:hover,
+      &:focus {
+        background-color: rgba($primary-color, 0.2);
+        color: $primary-color;
+      }
+      &.active {
+        background-color: $primary-color;
+        color: $white;
+      }
+    }
+  }
+  /* Global search input */
+  input.contract-status-filter {
+    background-color: $dark-card-background !important;
+    border-color: $dark-card-border;
+    color: $dark-all-font-color !important;
+    &::placeholder {
+      color: $dark-small-font-color;
+    }
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+    }
+  }
+  /* Per-page select */
+  .contract-per-page-filter {
+    background-color: $dark-card-background;
+    border-color: $dark-card-border;
+    color: $dark-all-font-color;
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+    }
+  }
+  /* Active only filter – label and checkbox for dark */
+  .contract-active-only-filter {
+    color: rgba($primary-color, 0.95);
+    .form-check-input {
+      background-color: $dark-card-background;
+      &:checked {
+        background-color: $primary-color;
+        border-color: $primary-color;
+      }
+    }
+  }
+  .contract-active-only-filter span {
+    color: inherit;
+  }
+}
+
+/** Status dropdown menu (portaled to body): dark theme – menu and options */
+body.dark-only .contract-status-dropdown-menu,
+body.dark-sidebar .contract-status-dropdown-menu {
+  background-color: $dark-card-background !important;
+  border: 1px solid $dark-card-border !important;
+  .dropdown-item {
+    color: $dark-all-font-color !important;
+    &:hover,
+    &:focus {
+      background-color: rgba($primary-color, 0.2) !important;
+      color: $primary-color !important;
+    }
+    &.active {
+      background-color: $primary-color !important;
+      color: $white !important;
+    }
+  }
+}
+
+/** Contract form (Create): dark theme – Auto activate checkbox */
+.dark-only .contract-auto-activate,
+.dark-sidebar .contract-auto-activate,
+body.dark-only .contract-auto-activate,
+body.dark-sidebar .contract-auto-activate {
+  .form-check-label {
+    color: rgba($primary-color, 0.95);
+  }
+  input.form-check-input[type="checkbox"] {
+    background-color: $dark-card-background !important;
+    &:checked {
+      background-color: $primary-color !important;
+      border-color: $primary-color !important;
+    }
+  }
+}

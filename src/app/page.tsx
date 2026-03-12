@@ -3,22 +3,20 @@
 import React, { useEffect } from 'react';
 import { Container, Row, Col, TabContent, TabPane } from 'reactstrap';
 import LoginTab from '@/Component/Auth/Tabs/LoginTab';
-import { useSession } from 'next-auth/react';
+import { useAppSelector } from '@/Redux/ReduxStore';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { isAuthenticated, isRehydrating } = useAppSelector((state) => state.auth);
   const router = useRouter();
 
-  // Only redirect to dashboard when explicitly authenticated
   useEffect(() => {
-    if (status === 'authenticated' && session) {
+    if (!isRehydrating && isAuthenticated) {
       router.replace('/dashboard');
     }
-  }, [session, status, router]);
+  }, [isAuthenticated, isRehydrating, router]);
 
-  // Show login by default; only hide when we're sure user is authenticated (redirecting)
-  if (status === 'authenticated' && session) {
+  if (!isRehydrating && isAuthenticated) {
     return (
       <main className='login-page'>
         <div className='page-wrapper compact-wrapper' id='pageWrapper'>

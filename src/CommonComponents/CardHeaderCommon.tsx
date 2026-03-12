@@ -3,10 +3,10 @@ import { CardHeaderCommonType } from '@/Type/SideBarType';
 import React, { Fragment } from 'react';
 import { CardHeader } from 'reactstrap';
 
-const CardHeaderCommon = ({ icon, Name, title, description, description2 }: CardHeaderCommonType) => {
+const CardHeaderCommon = ({ icon, Name, title, titleClassName, headerClassName, description, description2 }: CardHeaderCommonType) => {
   return (
-    <CardHeader className='p-4'>
-      <h5>
+    <CardHeader className={['px-4', headerClassName].filter(Boolean).join(' ')}>
+      <h5 className={titleClassName}>
         {icon && icon}
         {title}
       </h5>

@@ -1,0 +1,55 @@
+/**=====================
+  Page Notice Alert (reusable, brand-themed)
+==========================**/
+.page-notice-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid var(--theme-default);
+  background-color: rgba(0, 173, 239, 0.08);
+  color: $theme-body-font-color;
+  font-size: 0.875rem;
+  line-height: 1.5;
+
+  .page-notice-alert__icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--theme-default);
+  }
+
+  .page-notice-alert__text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (max-width: 30rem) {
+    padding: 0.75rem 0.875rem;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+  }
+}
+
+// Equal spacing: same distance from label to alert and from alert to horizontal tabs
+.card-body > .page-notice-alert:first-child {
+  margin-top: 0rem;
+  margin-bottom: 1.75rem;
+}
+
+// Dark theme: white text for readability
+.dark-only .page-notice-alert,
+.dark-sidebar .page-notice-alert,
+body.dark-only .page-notice-alert,
+body.dark-sidebar .page-notice-alert {
+  color: $white !important;
+  .page-notice-alert__text {
+    color: $white !important;
+  }
+}
+
+/**==========================
+  Page Notice Alert Ends
+==========================**/

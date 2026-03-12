@@ -57,6 +57,8 @@ export interface BreadCrumbType {
 
 export interface CardHeaderCommonType {
   title: React.JSX.Element | string;
+  titleClassName?: string;
+  headerClassName?: string;
   description?:
     | string
     | {

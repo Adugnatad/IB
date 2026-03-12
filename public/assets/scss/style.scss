@@ -4,12 +4,17 @@
 :root {
     --theme-default: #00adef;
     --theme-secondary: #e38524;
+    --primary-color: #00adef;
+    /* Bootstrap primary override */
+    --bs-primary: #00adef;
+    --bs-primary-rgb: 0, 173, 239;
 }
 
 @import "theme/general";
 @import "theme/generic";
 @import "theme/card";
 @import "theme/loader";
+@import "theme/app-loader";
 @import "theme/header";
 @import "theme/sidebar";
 @import "theme/dashboard_default";
@@ -17,6 +22,7 @@
 @import "slick";
 @import "slick-theme";
 @import "theme/alert";
+@import "theme/page-notice";
 @import "theme/buttons";
 @import "theme/grid";
 @import "theme/errorpage";
@@ -49,6 +55,7 @@
 @import 'scrollable.scss';
 @import 'theme/scroll';
 @import "theme/table";
+@import "theme/contracts";
 @import "theme/chart";
 @import "theme/tab";
 @import "theme/gallery";

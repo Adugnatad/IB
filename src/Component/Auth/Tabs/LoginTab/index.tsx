@@ -1,52 +1,40 @@
 'use client';
 
 import React, { Fragment, useState } from 'react';
-import { Button, Form, FormGroup, Input, Label } from 'reactstrap';
-import { useRouter } from 'next/navigation';
+import { Button, Form, FormGroup, Input, Label, Spinner } from 'reactstrap';
 import { useTranslation } from 'react-i18next';
-import { signIn } from 'next-auth/react';
-import { toast } from 'react-toastify';
 import { Eye, EyeOff } from 'react-feather';
-import { TOAST_AUTO_CLOSE_MS } from '@/CommonComponents/ToastProvider';
+import { useLoginSubmit } from '@/hooks/useLoginSubmit';
+import Link from 'next/link';
 
 const LoginTab = () => {
   const { t } = useTranslation();
   const [togglePassword, setTogglePassword] = useState(false);
-  const [userId, setUserId] = useState('admin1');
-  const [password, setPassword] = useState('Test@123');
-  const router = useRouter();
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const { submit, loading } = useLoginSubmit();
 
   const formSubmitHandle = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const result = await signIn('credentials', {
-      email: userId,
-      password,
-      redirect: false,
-      callbackUrl: '/dashboard',
-    });
-
-    if (result?.ok) {
-      toast.success('Successfully logged in.', { autoClose: TOAST_AUTO_CLOSE_MS });
-      router.push('/dashboard');
-    } else {
-      toast.error('Invalid User ID or password.', { autoClose: TOAST_AUTO_CLOSE_MS });
-    }
+    await submit(identifier, password);
   };
 
   return (
     <Fragment>
-      <Form className='theme-form login-form-modern' onSubmit={(event) => formSubmitHandle(event)}>
+      <Form className='theme-form login-form-modern' onSubmit={formSubmitHandle}>
         <p className='login-welcome'>{t('Welcome to Internet Banking')}</p>
 
         <FormGroup>
-          <Label className='col-form-label'>{t('User ID')}</Label>
+          <Label className='col-form-label'>{t('User ID / Email / Phone')}</Label>
           <Input
             type='text'
             required
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             className='login-input'
-            placeholder='Enter your user ID'
+            placeholder='Username, email, or phone'
+            autoComplete='username'
+            disabled={loading}
           />
         </FormGroup>
 
@@ -60,6 +48,8 @@ const LoginTab = () => {
               required
               className='login-input'
               placeholder='Enter your password'
+              autoComplete='current-password'
+              disabled={loading}
             />
             <button
               type='button'
@@ -80,14 +70,21 @@ const LoginTab = () => {
               {t('Remember Me')}
             </Label>
           </div>
-          <a className='login-forgot-link' href='#'>
+          <Link className='login-forgot-link' href='/reset-password'>
             {t('Forgot User ID or Password')}
-          </a>
+          </Link>
         </div>
 
         <div className='login-submit-wrap d-flex justify-content-end'>
-          <Button color='primary' className='btn-signin' type='submit'>
-            {t('SIGN IN')}
+          <Button color='primary' className='btn-signin d-inline-flex align-items-center justify-content-center gap-2' type='submit' disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner size='sm' />
+                {t('Signing in')}
+              </>
+            ) : (
+              t('SIGN IN')
+            )}
           </Button>
         </div>
       </Form>

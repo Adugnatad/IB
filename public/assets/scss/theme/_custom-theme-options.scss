@@ -6860,6 +6860,20 @@ body {
     }
   }
 }
+
+// Table actions: three-dot icon clearly visible in dark theme (override any later .btn-link)
+body.dark-only .table-actions-dropdown .dropdown-toggle,
+body.dark-sidebar .table-actions-dropdown .dropdown-toggle {
+  color: #fff !important;
+  opacity: 1 !important;
+  svg {
+    color: #fff !important;
+    stroke: #fff !important;
+    fill: #fff !important;
+    opacity: 1 !important;
+  }
+}
+
 /**=====================
   20. Custom theme option CSS End
 ==========================**/

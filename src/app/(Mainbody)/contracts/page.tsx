@@ -1,34 +1,36 @@
-"use client";
+'use client';
 
-import React, { Fragment } from "react";
-import { Container, Row, Col, Card, CardBody } from "reactstrap";
-import CardHeaderCommon from "@/CommonComponents/CardHeaderCommon";
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { Container, Row, Col, Card, CardBody } from 'reactstrap';
+import CardHeaderCommon from '@/CommonComponents/CardHeaderCommon';
+import NoticeAlert from '@/CommonComponents/NoticeAlert';
+import { ContractsTab } from '@/features/contracts';
 
-const ContractsPage = () => {
+export default function ContractsPage() {
+  const { t } = useTranslation();
+
   return (
-    <Fragment>
-      <Container fluid={true}>
-        <Row>
-          <Col sm="12">
-            <Card>
-              <CardHeaderCommon
-                title="Welcome to Internet Banking"
-                description="Cooperative Bank of Oromia - Secure online banking at your fingertips"
+    <Container fluid>
+      <Row>
+        <Col sm="12">
+          <Card>
+            <CardHeaderCommon
+              title={t('Contracts Management')}
+              titleClassName="text-primary"
+              headerClassName="pb-3"
+            />
+            <CardBody>
+              <NoticeAlert
+                notice={t(
+                  'View and filter contracts by status. Use "Active only" to show active contracts. Create new contracts by linking a customer account (13-digit account number).'
+                )}
               />
-              <CardBody>
-                <p>
-                  Welcome to Cooperative Bank of Oromia Internet Banking Portal.
-                  Access your accounts, transfer funds, pay bills, and manage your
-                  finances securely online. Use the menu to navigate to the
-                  services you need.
-                </p>
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </Fragment>
+              <ContractsTab />
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
-};
-
-export default ContractsPage;
+}

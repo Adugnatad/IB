@@ -1407,6 +1407,13 @@
     }
   }
 }
+
+/** Sidebar menu: pointer cursor on hover over menu tabs/links */
+.main-nav .nav-menu a,
+.main-nav .nav-menu .dropdown a {
+  cursor: pointer;
+}
+
 /*=====================
   67. Sidebar CSS Ends
 ==========================**/

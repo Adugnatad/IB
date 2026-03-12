@@ -224,6 +224,76 @@ th {
     }
   }
 }
+
+// Users Management table: header text uses theme primary (#00adef), same as Add user button
+.users-management-table {
+  thead th.users-management-table-header,
+  thead th.users-management-table-header .users-management-table-header-btn {
+    color: var(--theme-default) !important;
+  }
+  thead th.users-management-table-header .btn:hover {
+    color: var(--theme-default) !important;
+    opacity: 0.9;
+  }
+}
+
+// Table actions dropdown: three-dotted toggle bright white in dark theme
+body.dark-only .table-actions-dropdown .dropdown-toggle,
+body.dark-sidebar .table-actions-dropdown .dropdown-toggle,
+body.dark-only .users-management-table .table-actions-dropdown .dropdown-toggle,
+body.dark-sidebar .users-management-table .table-actions-dropdown .dropdown-toggle {
+  color: #fff !important;
+  opacity: 1 !important;
+  &.btn-link.text-body {
+    color: #fff !important;
+  }
+  svg,
+  svg.feather {
+    color: #fff !important;
+    stroke: #fff !important;
+    fill: #fff !important;
+    opacity: 1 !important;
+  }
+}
+
+// Per-page dropdown (10/25/50): dark theme – dark hover so number stays visible
+body.dark-only .per-page-dropdown .dropdown-menu.per-page-dropdown-menu,
+body.dark-sidebar .per-page-dropdown .dropdown-menu.per-page-dropdown-menu {
+  background-color: $dark-card-background !important;
+  border: 1px solid $dark-card-border !important;
+  .dropdown-item {
+    color: $dark-all-font-color !important;
+    &:hover,
+    &:focus {
+      background-color: rgba($primary-color, 0.25) !important;
+      color: $white !important;
+    }
+  }
+}
+
+// Table actions dropdown (Edit/Delete etc.): dark theme when portaled to body
+body.dark-only .table-actions-dropdown-menu,
+body.dark-sidebar .table-actions-dropdown-menu {
+  background-color: $dark-card-background !important;
+  border: 1px solid $dark-card-border !important;
+  .dropdown-item {
+    color: $dark-all-font-color !important;
+    &:hover,
+    &:focus {
+      background-color: rgba($primary-color, 0.2) !important;
+      color: $primary-color !important;
+    }
+    &.text-danger {
+      color: $danger-color !important;
+      &:hover,
+      &:focus {
+        background-color: rgba($danger-color, 0.2) !important;
+        color: lighten($danger-color, 8%) !important;
+      }
+    }
+  }
+}
+
 /**=====================
   73.Table CSS Ends
 ==========================**/

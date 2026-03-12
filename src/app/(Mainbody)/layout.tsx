@@ -6,10 +6,9 @@ import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import Footer from "@/Component/Footer";
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
 
 export default function RootLayout({ children}: { children: React.ReactNode}) {
-  const { data: session, status } = useSession();
+  const { isAuthenticated, isRehydrating } = useSelector((store: RootState) => store.auth);
   const router = useRouter();
   const { sideBarType } = useSelector((store: RootState) => store.themeSlice);
   const backgroundColor = useSelector((store: RootState) => store.headerSlice.backGroundChange);
@@ -17,10 +16,10 @@ export default function RootLayout({ children}: { children: React.ReactNode}) {
   const path = usePathname();
 
   useEffect(() => {
-    if (status !== "loading" && !session) {
+    if (!isRehydrating && !isAuthenticated) {
       router.replace("/");
     }
-  }, [session, status, router]);
+  }, [isAuthenticated, isRehydrating, router]);
 
   useEffect(() => {
     window.addEventListener("resize", () => {
@@ -37,7 +36,7 @@ export default function RootLayout({ children}: { children: React.ReactNode}) {
     });
   }, [sideBarType]);
 
-  if (status === "loading" || !session) {
+  if (isRehydrating || !isAuthenticated) {
     return (
       <div className='d-flex justify-content-center align-items-center min-vh-100'>
         <div className='spinner-border text-primary' role='status'>
