@@ -1,16 +1,12 @@
-import { withAuth } from "next-auth/middleware";
-import { pagesOptions } from "./app/api/auth/[...nextauth]/pages-options";
+import { NextResponse, type NextRequest } from 'next/server';
 
-export default withAuth({
-  pages: {
-    ...pagesOptions,
-  },
-});
-  
- 
+export default function middleware(_req: NextRequest) {
+  // Auth is handled client-side via Redux + tokenManager (AuthGate / (Mainbody) layout).
+  // Using NextAuth `withAuth` here causes redirect loops like:
+  // "/?callbackUrl=%2Fdashboard" because no NextAuth session cookie exists after our custom login.
+  return NextResponse.next();
+}
+
 export const config = {
-  // restricted routes
-  matcher: [
-    "/:path*"
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|assets).*)'],
 };

@@ -14,17 +14,28 @@ import {
   deleteContract,
   ApiError,
 } from '@/services/api/contracts-api';
+import { decodeJwtPayload } from '@/lib/auth/jwt';
+import { tokenManager } from '@/lib/auth/token-manager';
 import type { Contract } from '@/types/contracts';
 import type { ContractTableSortKey, SortDirection } from '@/types/contracts';
 import type { UpdateContractPayload } from '@/types/contracts';
 import type { CreateContractFormValues } from './validation';
 import { ContractsTable, defaultFilters } from './ContractsTable';
 import { CreateContractForm } from './CreateContractForm';
-import { EditContractModal } from './EditContractModal';
+import { EditContractForm } from './EditContractForm';
 import { DeleteContractModal } from './DeleteContractModal';
 
 const getErrorMessage = (err: unknown): string => {
-  if (err instanceof ApiError) return err.message;
+  if (err instanceof ApiError) {
+    const body = err.body as { errorMessage?: string; message?: string; errorCode?: string } | undefined;
+    const details =
+      body?.errorMessage ??
+      (typeof body?.message === 'string' ? body.message : undefined) ??
+      undefined;
+    const code = body?.errorCode ?? err.code;
+    const status = err.status ? ` (${err.status})` : '';
+    return `${details ?? err.message}${code ? ` [${code}]` : ''}${status}`;
+  }
   if (err instanceof Error) return err.message;
   return 'An unexpected error occurred.';
 };
@@ -47,7 +58,8 @@ function toCreatePayload(
 export function ContractsTab() {
   const { t } = useTranslation();
   const authUser = useAppSelector((s) => s.auth?.user);
-  const createdByUserId = authUser?.id ?? '';
+  const jwtSub = decodeJwtPayload(tokenManager.getAccessToken() ?? '')?.sub;
+  const createdByUserId = (authUser?.id || jwtSub || '') as string;
 
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,6 +132,7 @@ export function ContractsTab() {
   );
 
   const handleEditClick = useCallback((contract: Contract) => {
+    setShowCreateForm(false);
     setContractToEdit(contract);
   }, []);
 
@@ -171,6 +184,14 @@ export function ContractsTab() {
 
   return (
     <>
+      {contractToEdit && (
+        <EditContractForm
+          contract={contractToEdit}
+          submitLoading={updateLoading}
+          onCancel={() => setContractToEdit(null)}
+          onSubmit={handleEditSubmit}
+        />
+      )}
       {showCreateForm && (
         <CreateContractForm
           createdByUserId={createdByUserId}
@@ -184,10 +205,13 @@ export function ContractsTab() {
         <CardBody>
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
             <h5 className="mb-0">{t('Contracts List')}</h5>
-            {!showCreateForm && (
+            {!showCreateForm && !contractToEdit && (
               <Button
                 color="primary"
-                onClick={() => setShowCreateForm(true)}
+                onClick={() => {
+                  setContractToEdit(null);
+                  setShowCreateForm(true);
+                }}
                 disabled={!createdByUserId}
               >
                 <Plus size={16} className="me-1" />
@@ -203,13 +227,6 @@ export function ContractsTab() {
               </Button>
             </div>
           )}
-          <EditContractModal
-            isOpen={!!contractToEdit}
-            toggle={() => setContractToEdit(null)}
-            contract={contractToEdit}
-            submitLoading={updateLoading}
-            onSubmit={handleEditSubmit}
-          />
           <DeleteContractModal
             isOpen={!!contractToDelete}
             toggle={() => setContractToDelete(null)}

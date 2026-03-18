@@ -33,23 +33,27 @@ export const createContractSchema = yup.object({
 export type CreateContractFormValues = yup.InferType<typeof createContractSchema>;
 
 /** Schema for update contract form (edit dialog). */
-export const updateContractSchema = yup.object({
-  contractName: yup.string().trim().required('Contract name is required').max(255, 'Max 255 characters'),
-  description: yup.string().trim().required('Description is required').max(2000, 'Max 2000 characters'),
-  effectiveDate: yup.string().trim().required('Effective date is required'),
-  expiryDate: yup.string().trim().required('Expiry date is required'),
-  isActive: yup.boolean().default(true),
-  metadata: yup.string().trim().max(1000).optional(),
-}).test(
-  'dates-order',
-  'Expiry date must be after effective date',
-  function (value) {
-    if (!value?.effectiveDate || !value?.expiryDate) return true;
-    const effective = new Date(value.effectiveDate).getTime();
-    const expiry = new Date(value.expiryDate).getTime();
-    return expiry > effective;
-  }
-);
+export const updateContractSchema = yup
+  .object({
+    contractName: yup.string().trim().required('Contract name is required').max(255, 'Max 255 characters'),
+    description: yup.string().trim().required('Description is required').max(2000, 'Max 2000 characters'),
+    effectiveDate: yup.string().trim().required('Effective date is required'),
+    expiryDate: yup.string().trim().required('Expiry date is required'),
+    isActive: yup.boolean().default(true),
+    metadata: yup.string().trim().max(1000).optional(),
+  })
+  .test(
+    'dates-order',
+    'Expiry date must be on or after effective date',
+    function (value) {
+      if (!value?.effectiveDate || !value?.expiryDate) return true;
+      const effective = new Date(value.effectiveDate).getTime();
+      const expiry = new Date(value.expiryDate).getTime();
+      if (Number.isNaN(effective) || Number.isNaN(expiry)) return true;
+      // Allow same-day expiry (>= instead of >)
+      return expiry >= effective;
+    }
+  );
 
 export type UpdateContractFormValues = yup.InferType<typeof updateContractSchema>;
 

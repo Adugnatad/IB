@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '@/Redux/ReduxStore';
 import { setSession, clearOtp, setAuthError, clearAuthError } from '@/Redux/Slices/authSlice';
 import { tokenManager } from '@/lib/auth/token-manager';
 import { startSessionScheduler } from '@/lib/auth/session-scheduler';
+import { decodeJwtPayload } from '@/lib/auth/jwt';
 import { verifyOtp } from '@/services/api/auth-api';
 import { ApiError } from '@/services/api/client';
 import { persistAuthUser } from '@/components/Auth/AuthGate';
@@ -88,7 +89,10 @@ export default function VerifyOtpPage() {
         accessToken: data.accessToken,
         refreshToken: data.refreshToken ?? data.accessToken,
       });
-      const user = data.user ?? { id: 'unknown' };
+      const jwtSub = decodeJwtPayload(data.accessToken)?.sub;
+      const user = data.user?.id
+        ? data.user
+        : ({ ...(data.user ?? {}), id: jwtSub ?? 'unknown' } as (typeof data.user) & { id: string });
       persistAuthUser({ id: user.id, username: user.username, email: user.email });
       dispatch(setSession({ user, isAuthenticated: true }));
       dispatch(clearOtp());

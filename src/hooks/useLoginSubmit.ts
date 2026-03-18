@@ -6,6 +6,7 @@ import { useAppDispatch } from '@/Redux/ReduxStore';
 import { setSession, requireOtp, setAuthError, clearAuthError } from '@/Redux/Slices/authSlice';
 import { tokenManager } from '@/lib/auth/token-manager';
 import { startSessionScheduler } from '@/lib/auth/session-scheduler';
+import { decodeJwtPayload } from '@/lib/auth/jwt';
 import { login, type LoginResponse } from '@/services/api/auth-api';
 import { ApiError } from '@/services/api/client';
 import { getAuthErrorMessage } from '@/lib/auth/error-messages';
@@ -64,11 +65,15 @@ export function useLoginSubmit() {
           accessToken,
           refreshToken: refreshToken ?? accessToken,
         });
-        const user = data.user ?? { id: 'unknown' };
+        const jwtSub = decodeJwtPayload(accessToken)?.sub;
+        const user = data.user?.id
+          ? data.user
+          : ({ ...(data.user ?? {}), id: jwtSub ?? 'unknown' } as LoginResponse['user'] & { id: string });
         persistAuthUser({ id: user.id, username: user.username, email: user.email });
         dispatch(setSession({ user, isAuthenticated: true }));
         startSessionScheduler();
-        router.replace('/dashboard');
+        // Redirect deferred so Redux is committed; home page also redirects when isAuthenticated flips
+        requestAnimationFrame(() => router.replace('/dashboard'));
       } catch (err) {
         const message = err instanceof ApiError ? getAuthErrorMessage(err) : getAuthErrorMessage(err);
         const code = err instanceof ApiError ? err.code : 'UNKNOWN';

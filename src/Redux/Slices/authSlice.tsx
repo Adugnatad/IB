@@ -43,6 +43,7 @@ const authSlice = createSlice({
     ) {
       state.user = action.payload.user;
       state.isAuthenticated = action.payload.isAuthenticated;
+      state.isRehydrating = false;
       state.otpRequired = false;
       state.otpCountdownDeadline = null;
       state.pendingIdentifier = null;
@@ -54,6 +55,7 @@ const authSlice = createSlice({
       state,
       action: PayloadAction<{ identifier: string; tempToken?: string | null }>
     ) {
+      state.isRehydrating = false;
       state.otpRequired = true;
       state.otpCountdownDeadline = Date.now() + OTP_EXPIRY_MS;
       state.pendingIdentifier = action.payload.identifier;

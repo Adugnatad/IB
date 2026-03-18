@@ -2,30 +2,19 @@
 
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Modal,
-  ModalHeader,
-  ModalBody,
-  Button,
-  Form,
-  FormGroup,
-  Label,
-  Input,
-  Row,
-  Col,
-} from 'reactstrap';
+import { Card, CardBody, CardHeader, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
 import { useForm, Controller } from 'react-hook-form';
 import { AppLoader } from '@/Component/Loader';
-import type { Contract } from '@/types/contracts';
-import type { UpdateContractPayload } from '@/types/contracts';
+import type { Contract, UpdateContractPayload } from '@/types/contracts';
 import { updateContractSchema, type UpdateContractFormValues } from './validation';
 import { isoToDateInputValue } from './utils';
+import { toast } from 'react-toastify';
+import { TOAST_AUTO_CLOSE_MS } from '@/CommonComponents/ToastProvider';
 
-export interface EditContractModalProps {
-  isOpen: boolean;
-  toggle: () => void;
-  contract: Contract | null;
+export interface EditContractFormProps {
+  contract: Contract;
   submitLoading: boolean;
+  onCancel: () => void;
   onSubmit: (contractId: string, payload: UpdateContractPayload) => Promise<void>;
 }
 
@@ -49,13 +38,7 @@ function toPayload(values: UpdateContractFormValues): UpdateContractPayload {
   };
 }
 
-export function EditContractModal({
-  isOpen,
-  toggle,
-  contract,
-  submitLoading,
-  onSubmit,
-}: EditContractModalProps) {
+export function EditContractForm({ contract, submitLoading, onCancel, onSubmit }: EditContractFormProps) {
   const { t } = useTranslation();
   const {
     control,
@@ -63,43 +46,59 @@ export function EditContractModal({
     reset,
     setError,
     formState: { errors },
-  } = useForm<UpdateContractFormValues>({
-    defaultValues,
-  });
+  } = useForm<UpdateContractFormValues>({ defaultValues });
 
   useEffect(() => {
-    if (contract && isOpen) {
-      reset({
-        contractName: contract.contractName ?? '',
-        description: contract.description ?? '',
-        effectiveDate: isoToDateInputValue(contract.effectiveDate),
-        expiryDate: isoToDateInputValue(contract.expiryDate),
-        isActive: contract.active ?? true,
-        metadata: contract.metadata ?? '',
-      });
-    }
-  }, [contract, isOpen, reset]);
+    reset({
+      contractName: contract.contractName ?? '',
+      description: contract.description ?? '',
+      effectiveDate: isoToDateInputValue(contract.effectiveDate),
+      expiryDate: isoToDateInputValue(contract.expiryDate),
+      isActive: contract.active ?? true,
+      metadata: contract.metadata ?? '',
+    });
+  }, [contract, reset]);
 
-  const onFormSubmit = handleSubmit(async (values) => {
-    if (!contract) return;
-    try {
-      const valid = await updateContractSchema.validate(values, { abortEarly: false });
-      await onSubmit(contract.id, toPayload(valid));
-      toggle();
-    } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'inner' in err) {
-        const inner = (err as { inner: { path?: string; message?: string }[] }).inner;
-        inner?.forEach((e) => {
-          if (e.path) setError(e.path as keyof UpdateContractFormValues, { message: e.message });
-        });
+  const onFormSubmit = handleSubmit(
+    async (values) => {
+      try {
+        const valid = await updateContractSchema.validate(values, { abortEarly: false });
+        await onSubmit(contract.id, toPayload(valid));
+      } catch (err: unknown) {
+        if (err && typeof err === 'object' && 'inner' in err) {
+          const inner = (err as { inner: { path?: string; message?: string }[] }).inner;
+          inner?.forEach((e) => {
+            if (e.path) setError(e.path as keyof UpdateContractFormValues, { message: e.message });
+          });
+          const first = inner?.find((e) => e.message);
+          toast.error(first?.message || t('Please fix the highlighted fields and try again.'), {
+            autoClose: TOAST_AUTO_CLOSE_MS,
+          });
+          return;
+        }
+        const msg = err instanceof Error ? err.message : t('Failed to save changes.');
+        toast.error(msg, { autoClose: TOAST_AUTO_CLOSE_MS });
       }
+    },
+    (formErrors) => {
+      const firstKey = Object.keys(formErrors)[0] as keyof UpdateContractFormValues | undefined;
+      const firstMessage = firstKey ? formErrors[firstKey]?.message : undefined;
+      toast.error(
+        (typeof firstMessage === 'string' && firstMessage) || t('Please fix the highlighted fields and try again.'),
+        { autoClose: TOAST_AUTO_CLOSE_MS }
+      );
     }
-  });
+  );
 
   return (
-    <Modal isOpen={isOpen} toggle={toggle} size="lg">
-      <ModalHeader toggle={toggle}>{t('Edit contract')}</ModalHeader>
-      <ModalBody>
+    <Card className="mb-3">
+      <CardHeader className="d-flex align-items-center justify-content-between">
+        <h6 className="mb-0">{t('Edit contract')}</h6>
+        <Button color="link" size="sm" className="p-0 text-primary" onClick={onCancel} disabled={submitLoading}>
+          {t('Cancel')}
+        </Button>
+      </CardHeader>
+      <CardBody>
         <Form onSubmit={onFormSubmit}>
           <Row>
             <Col md={12}>
@@ -118,9 +117,7 @@ export function EditContractModal({
                     />
                   )}
                 />
-                {errors.contractName && (
-                  <small className="text-danger">{errors.contractName.message}</small>
-                )}
+                {errors.contractName && <small className="text-danger">{errors.contractName.message}</small>}
               </FormGroup>
             </Col>
             <Col md={12}>
@@ -141,9 +138,7 @@ export function EditContractModal({
                     />
                   )}
                 />
-                {errors.description && (
-                  <small className="text-danger">{errors.description.message}</small>
-                )}
+                {errors.description && <small className="text-danger">{errors.description.message}</small>}
               </FormGroup>
             </Col>
             <Col md={6}>
@@ -153,18 +148,10 @@ export function EditContractModal({
                   name="effectiveDate"
                   control={control}
                   render={({ field }) => (
-                    <Input
-                      id="edit-effectiveDate"
-                      type="date"
-                      {...field}
-                      invalid={!!errors.effectiveDate}
-                      disabled={submitLoading}
-                    />
+                    <Input id="edit-effectiveDate" type="date" {...field} invalid={!!errors.effectiveDate} disabled={submitLoading} />
                   )}
                 />
-                {errors.effectiveDate && (
-                  <small className="text-danger">{errors.effectiveDate.message}</small>
-                )}
+                {errors.effectiveDate && <small className="text-danger">{errors.effectiveDate.message}</small>}
               </FormGroup>
             </Col>
             <Col md={6}>
@@ -174,18 +161,10 @@ export function EditContractModal({
                   name="expiryDate"
                   control={control}
                   render={({ field }) => (
-                    <Input
-                      id="edit-expiryDate"
-                      type="date"
-                      {...field}
-                      invalid={!!errors.expiryDate}
-                      disabled={submitLoading}
-                    />
+                    <Input id="edit-expiryDate" type="date" {...field} invalid={!!errors.expiryDate} disabled={submitLoading} />
                   )}
                 />
-                {errors.expiryDate && (
-                  <small className="text-danger">{errors.expiryDate.message}</small>
-                )}
+                {errors.expiryDate && <small className="text-danger">{errors.expiryDate.message}</small>}
               </FormGroup>
             </Col>
             <Col md={6}>
@@ -227,14 +206,12 @@ export function EditContractModal({
                     />
                   )}
                 />
-                {errors.metadata && (
-                  <small className="text-danger">{errors.metadata.message}</small>
-                )}
+                {errors.metadata && <small className="text-danger">{errors.metadata.message}</small>}
               </FormGroup>
             </Col>
           </Row>
-          <div className="d-flex justify-content-end gap-2 mt-3">
-            <Button color="light" type="button" onClick={toggle} disabled={submitLoading}>
+          <div className="d-flex justify-content-end gap-2 mt-2">
+            <Button color="light" type="button" onClick={onCancel} disabled={submitLoading}>
               {t('Cancel')}
             </Button>
             <Button color="primary" type="submit" disabled={submitLoading}>
@@ -249,7 +226,8 @@ export function EditContractModal({
             </Button>
           </div>
         </Form>
-      </ModalBody>
-    </Modal>
+      </CardBody>
+    </Card>
   );
 }
+
