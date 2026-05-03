@@ -14,11 +14,13 @@ export interface LoginResponse {
   accessToken?: string;
   refreshToken?: string;
   user?: AuthUser;
+  userDetails?: AuthUser;
   message?: string;
 }
 
 export interface AuthUser {
   id: string;
+  roleId?: string;
   username?: string;
   email?: string;
   phone?: string;
@@ -37,6 +39,7 @@ export interface VerifyOtpResponse {
   accessToken: string;
   refreshToken: string;
   user?: AuthUser;
+  userDetails?: AuthUser;
 }
 
 export interface ResetPasswordRequest {
@@ -94,3 +97,35 @@ export async function resetPassword(payload: ResetPasswordRequest): Promise<Rese
 }
 
 export { ApiError };
+
+/**
+ * Backend auth payloads may return user info as either `user` or `userDetails`.
+ * Prefer whichever contains a concrete `id` (internal UUID), then fall back safely.
+ */
+export function getAuthUserFromResponse(
+  payload: { user?: AuthUser; userDetails?: AuthUser },
+  fallbackId?: string
+): AuthUser | null {
+  const fromUser = payload.user;
+  const fromDetails = payload.userDetails;
+  const withId = [fromUser, fromDetails].find((u) => typeof u?.id === 'string' && u.id.trim().length > 0);
+  if (withId) return withId;
+
+  const merged = ({ ...(fromUser ?? {}), ...(fromDetails ?? {}) } as AuthUser) ?? null;
+  const id = (merged?.id && String(merged.id).trim()) || (fallbackId ?? '').trim();
+  if (!id) return null;
+  const roleIdCandidate =
+    (typeof merged?.roleId === 'string' && merged.roleId.trim()) ||
+    (typeof merged?.role === 'object' &&
+    merged.role &&
+    'id' in (merged.role as Record<string, unknown>) &&
+    typeof (merged.role as Record<string, unknown>).id === 'string'
+      ? ((merged.role as Record<string, unknown>).id as string).trim()
+      : '');
+
+  return {
+    ...merged,
+    id,
+    roleId: roleIdCandidate || undefined,
+  };
+}

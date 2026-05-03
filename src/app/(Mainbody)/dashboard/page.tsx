@@ -4,6 +4,9 @@ import React, { Fragment } from "react";
 import { Container, Row, Col, Card, CardBody } from "reactstrap";
 import Breadcrumbs from "@/CommonComponents/BreadCrumb";
 import CardHeaderCommon from "@/CommonComponents/CardHeaderCommon";
+import NoticeAlert from "@/CommonComponents/NoticeAlert";
+import { ContractsExecutiveDashboard } from "@/features/contracts/ContractsExecutiveDashboard";
+import { ContractsRecentActivityPanel } from "@/features/contracts/ContractsRecentActivityPanel";
 
 const Dashboard = () => {
   return (
@@ -14,16 +17,16 @@ const Dashboard = () => {
           <Col sm="12">
             <Card>
               <CardHeaderCommon
-                title="Welcome to Internet Banking"
-                description="Cooperative Bank of Oromia - Secure online banking at your fingertips"
+                title="Executive Contract Dashboard"
+                description="Real-time contract operations cockpit"
+                titleClassName="text-primary"
               />
               <CardBody>
-                <p>
-                  Welcome to Cooperative Bank of Oromia Internet Banking Portal.
-                  Access your accounts, transfer funds, pay bills, and manage your
-                  finances securely online. Use the menu to navigate to the
-                  services you need.
-                </p>
+                <NoticeAlert
+                  notice="Monitor contract health, compare statuses, and navigate operational KPIs in one place."
+                />
+                <ContractsExecutiveDashboard />
+                <ContractsRecentActivityPanel />
               </CardBody>
             </Card>
           </Col>

@@ -57,6 +57,29 @@ export const updateContractSchema = yup
 
 export type UpdateContractFormValues = yup.InferType<typeof updateContractSchema>;
 
+export const addContractUserSchema = yup.object({
+  roleId: yup.string().trim().required('Role ID is required'),
+  permissionType: yup
+    .string()
+    .trim()
+    .oneOf(['INITIATE', 'APPROVE', 'VIEW'], 'Please select a valid permission type')
+    .required('Permission type is required'),
+  phone: yup.string().trim().required('Phone is required'),
+  email: yup.string().trim().email('Invalid email').required('Email is required'),
+  firstName: yup.string().trim().required('First name is required'),
+  lastName: yup.string().trim().required('Last name is required'),
+  gender: yup.string().trim().oneOf(['Male', 'Female'], 'Please select a valid gender').required('Gender is required'),
+  dateOfBirth: yup.string().trim().required('Date of birth is required'),
+  addressLine1: yup.string().trim().required('Address is required'),
+});
+
+export type AddContractUserFormValues = yup.InferType<typeof addContractUserSchema>;
+
+/** Same validation as create; edit form pre-fills from API where available. */
+export const editContractUserSchema = addContractUserSchema;
+
+export type EditContractUserFormValues = yup.InferType<typeof editContractUserSchema>;
+
 export function isValidAccountNumber(value: string): boolean {
   return /^\d{13}$/.test((value ?? '').trim());
 }

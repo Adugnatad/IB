@@ -16,7 +16,7 @@ import {
   Badge,
 } from 'reactstrap';
 import { AppLoader } from '@/Component/Loader';
-import { ChevronDown, ChevronUp, MoreVertical, Edit2, Trash2 } from 'react-feather';
+import { ChevronDown, ChevronUp, MoreVertical, Edit2, Trash2, UserPlus, PauseCircle, PlayCircle, Slash, Settings } from 'react-feather';
 import type { Contract } from '@/types/contracts';
 import type { ContractTableSortKey, SortDirection } from '@/types/contracts';
 import { CONTRACT_STATUSES } from '@/types/contracts';
@@ -48,6 +48,11 @@ export interface ContractsTableProps {
   onFiltersChange: (f: ContractsTableFilters) => void;
   onEdit?: (contract: Contract) => void;
   onDelete?: (contract: Contract) => void;
+  onAddUser?: (contract: Contract) => void;
+  onSuspend?: (contract: Contract) => void;
+  onTerminate?: (contract: Contract) => void;
+  onActivate?: (contract: Contract) => void;
+  onView?: (contract: Contract) => void;
 }
 
 function filterByGlobalSearch(list: Contract[], query: string): Contract[] {
@@ -94,6 +99,11 @@ export function ContractsTable({
   onFiltersChange,
   onEdit,
   onDelete,
+  onAddUser,
+  onSuspend,
+  onTerminate,
+  onActivate,
+  onView,
 }: ContractsTableProps) {
   const { t } = useTranslation();
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -264,12 +274,42 @@ export function ContractsTable({
                   <td>{contract.accountCount ?? 0}</td>
                   <td>{formatContractDate(contract.createdDate)}</td>
                   <td>
-                    {(onEdit || onDelete) && (
+                    {(onEdit || onDelete || onAddUser || onSuspend || onTerminate || onActivate || onView) && (
                       <UncontrolledDropdown className="table-actions-dropdown">
                         <DropdownToggle color="link" className="p-0 text-body" caret={false}>
                           <MoreVertical size={18} />
                         </DropdownToggle>
                         <DropdownMenu end container="body" strategy="fixed" className="table-actions-dropdown-menu">
+                          {onView && (
+                            <DropdownItem onClick={() => onView(contract)}>
+                              <Settings size={14} className="me-2" />
+                              {t('Settings')}
+                            </DropdownItem>
+                          )}
+                          {onAddUser && (
+                            <DropdownItem onClick={() => onAddUser(contract)}>
+                              <UserPlus size={14} className="me-2" />
+                              {t('Add user')}
+                            </DropdownItem>
+                          )}
+                          {onSuspend && contract.status !== 'SUSPENDED' && (
+                            <DropdownItem onClick={() => onSuspend(contract)}>
+                              <PauseCircle size={14} className="me-2" />
+                              {t('Suspend')}
+                            </DropdownItem>
+                          )}
+                          {onActivate && contract.status === 'PENDING' && (
+                            <DropdownItem onClick={() => onActivate(contract)}>
+                              <PlayCircle size={14} className="me-2" />
+                              {t('Activate')}
+                            </DropdownItem>
+                          )}
+                          {onTerminate && contract.status !== 'TERMINATED' && (
+                            <DropdownItem onClick={() => onTerminate(contract)} className="text-danger">
+                              <Slash size={14} className="me-2" />
+                              {t('Terminate')}
+                            </DropdownItem>
+                          )}
                           {onEdit && (
                             <DropdownItem onClick={() => onEdit(contract)}>
                               <Edit2 size={14} className="me-2" />

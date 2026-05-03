@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/Redux/ReduxStore';
 import { Card, CardBody, Button } from 'reactstrap';
 import { Plus } from 'react-feather';
@@ -11,7 +12,7 @@ import {
   fetchContracts,
   createContract,
   updateContract,
-  deleteContract,
+  activateContract,
   ApiError,
 } from '@/services/api/contracts-api';
 import { decodeJwtPayload } from '@/lib/auth/jwt';
@@ -23,7 +24,13 @@ import type { CreateContractFormValues } from './validation';
 import { ContractsTable, defaultFilters } from './ContractsTable';
 import { CreateContractForm } from './CreateContractForm';
 import { EditContractForm } from './EditContractForm';
-import { DeleteContractModal } from './DeleteContractModal';
+import { ContractLifecycleActionModal, type ContractLifecycleAction } from './ContractLifecycleActionModal';
+
+function resolveCurrentUserId(authUserId: unknown, jwtPayload: Record<string, unknown> | null): string {
+  const candidates: unknown[] = [authUserId, jwtPayload?.userId, jwtPayload?.user_id, jwtPayload?.uid, jwtPayload?.sub];
+  const match = candidates.find((candidate) => typeof candidate === 'string' && candidate.trim().length > 0);
+  return typeof match === 'string' ? match.trim() : '';
+}
 
 const getErrorMessage = (err: unknown): string => {
   if (err instanceof ApiError) {
@@ -57,9 +64,10 @@ function toCreatePayload(
 
 export function ContractsTab() {
   const { t } = useTranslation();
+  const router = useRouter();
   const authUser = useAppSelector((s) => s.auth?.user);
-  const jwtSub = decodeJwtPayload(tokenManager.getAccessToken() ?? '')?.sub;
-  const createdByUserId = (authUser?.id || jwtSub || '') as string;
+  const jwtPayload = decodeJwtPayload(tokenManager.getAccessToken() ?? '');
+  const createdByUserId = resolveCurrentUserId(authUser?.id, (jwtPayload as Record<string, unknown> | null) ?? null);
 
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,9 +78,10 @@ export function ContractsTab() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [contractToEdit, setContractToEdit] = useState<Contract | null>(null);
-  const [contractToDelete, setContractToDelete] = useState<Contract | null>(null);
+  const [contractLifecycleTarget, setContractLifecycleTarget] = useState<Contract | null>(null);
+  const [contractLifecycleAction, setContractLifecycleAction] = useState<ContractLifecycleAction>('activate');
   const [updateLoading, setUpdateLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [lifecycleLoading, setLifecycleLoading] = useState(false);
 
   const loadContracts = useCallback(async () => {
     setLoading(true);
@@ -83,7 +92,8 @@ export function ContractsTab() {
         activeOnly: filters.activeOnly,
       };
       const data = await fetchContracts(params);
-      setContracts(data);
+      // Hide deleted contracts in the list view.
+      setContracts(data.filter((c) => !c.deleted));
     } catch (err) {
       const msg = getErrorMessage(err);
       setError(msg);
@@ -136,9 +146,19 @@ export function ContractsTab() {
     setContractToEdit(contract);
   }, []);
 
-  const handleDeleteClick = useCallback((contract: Contract) => {
-    setContractToDelete(contract);
+  const openLifecycleAction = useCallback((action: ContractLifecycleAction, contract: Contract) => {
+    setShowCreateForm(false);
+    setContractToEdit(null);
+    setContractLifecycleAction(action);
+    setContractLifecycleTarget(contract);
   }, []);
+  const handleActivateClick = useCallback((contract: Contract) => openLifecycleAction('activate', contract), [openLifecycleAction]);
+  const handleViewClick = useCallback(
+    (contract: Contract) => {
+      router.push(`/contracts/contract?contractId=${encodeURIComponent(contract.id)}`);
+    },
+    [router]
+  );
 
   const handleEditSubmit = useCallback(
     async (contractId: string, payload: UpdateContractPayload) => {
@@ -162,25 +182,28 @@ export function ContractsTab() {
     [createdByUserId, loadContracts, t]
   );
 
-  const handleDeleteConfirm = useCallback(async () => {
-    if (!contractToDelete?.id) return;
-    if (!createdByUserId) {
-      toast.error(t('You must be signed in to delete a contract.'), { autoClose: TOAST_AUTO_CLOSE_MS });
-      return;
-    }
-    setDeleteLoading(true);
-    try {
-      await deleteContract(contractToDelete.id, createdByUserId);
-      toast.success(t('Contract deleted successfully.'), { autoClose: TOAST_AUTO_CLOSE_MS });
-      setContractToDelete(null);
-      loadContracts();
-    } catch (err) {
-      toast.error(getErrorMessage(err), { autoClose: TOAST_AUTO_CLOSE_MS });
-      throw err;
-    } finally {
-      setDeleteLoading(false);
-    }
-  }, [contractToDelete, createdByUserId, loadContracts, t]);
+  const handleLifecycleConfirm = useCallback(
+    async (reason?: string) => {
+      if (!contractLifecycleTarget?.id) return;
+      if (!createdByUserId) {
+        toast.error(t('You must be signed in to update contract lifecycle.'), { autoClose: TOAST_AUTO_CLOSE_MS });
+        return;
+      }
+      setLifecycleLoading(true);
+      try {
+        await activateContract(contractLifecycleTarget.id, createdByUserId);
+        toast.success(t('Contract activated successfully.'), { autoClose: TOAST_AUTO_CLOSE_MS });
+        setContractLifecycleTarget(null);
+        loadContracts();
+      } catch (err) {
+        toast.error(getErrorMessage(err), { autoClose: TOAST_AUTO_CLOSE_MS });
+        throw err;
+      } finally {
+        setLifecycleLoading(false);
+      }
+    },
+    [contractLifecycleTarget, contractLifecycleAction, createdByUserId, loadContracts, t]
+  );
 
   return (
     <>
@@ -200,6 +223,14 @@ export function ContractsTab() {
           onSubmit={handleCreateSubmit}
         />
       )}
+      <ContractLifecycleActionModal
+        isOpen={!!contractLifecycleTarget}
+        action={contractLifecycleAction}
+        contract={contractLifecycleTarget}
+        loading={lifecycleLoading}
+        toggle={() => setContractLifecycleTarget(null)}
+        onConfirm={handleLifecycleConfirm}
+      />
 
       <Card>
         <CardBody>
@@ -227,13 +258,6 @@ export function ContractsTab() {
               </Button>
             </div>
           )}
-          <DeleteContractModal
-            isOpen={!!contractToDelete}
-            toggle={() => setContractToDelete(null)}
-            contract={contractToDelete}
-            loading={deleteLoading}
-            onConfirm={handleDeleteConfirm}
-          />
           <ContractsTable
             contracts={contracts}
             loading={loading}
@@ -243,7 +267,8 @@ export function ContractsTab() {
             filters={filters}
             onFiltersChange={setFilters}
             onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
+            onActivate={handleActivateClick}
+            onView={handleViewClick}
           />
         </CardBody>
       </Card>

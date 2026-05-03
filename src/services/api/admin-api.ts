@@ -34,7 +34,11 @@ export async function deleteUser(userId: string): Promise<void> {
 }
 
 export async function fetchRoles(): Promise<Role[]> {
-  const { data } = await apiRequest<Role[]>(ROLE, { method: 'GET' });
+  const { data } = await apiRequest<Role[]>(ROLE, {
+    method: 'GET',
+    // Roles endpoint is exposed on /api (no /v1), same as contracts APIs.
+    useContractsBase: true,
+  });
   return Array.isArray(data) ? data : [];
 }
 

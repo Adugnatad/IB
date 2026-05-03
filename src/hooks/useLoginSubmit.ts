@@ -7,7 +7,7 @@ import { setSession, requireOtp, setAuthError, clearAuthError } from '@/Redux/Sl
 import { tokenManager } from '@/lib/auth/token-manager';
 import { startSessionScheduler } from '@/lib/auth/session-scheduler';
 import { decodeJwtPayload } from '@/lib/auth/jwt';
-import { login, type LoginResponse } from '@/services/api/auth-api';
+import { login, getAuthUserFromResponse } from '@/services/api/auth-api';
 import { ApiError } from '@/services/api/client';
 import { getAuthErrorMessage } from '@/lib/auth/error-messages';
 import { persistAuthUser } from '@/components/Auth/AuthGate';
@@ -66,10 +66,14 @@ export function useLoginSubmit() {
           refreshToken: refreshToken ?? accessToken,
         });
         const jwtSub = decodeJwtPayload(accessToken)?.sub;
-        const user = data.user?.id
-          ? data.user
-          : ({ ...(data.user ?? {}), id: jwtSub ?? 'unknown' } as LoginResponse['user'] & { id: string });
-        persistAuthUser({ id: user.id, username: user.username, email: user.email });
+        const user = getAuthUserFromResponse(data, jwtSub ?? undefined);
+        if (!user) {
+          const message = 'Login succeeded but user identity is missing. Please contact support.';
+          dispatch(setAuthError({ message, code: 'API_ERROR' }));
+          toast.error(message, { autoClose: TOAST_AUTO_CLOSE_MS });
+          return;
+        }
+        persistAuthUser({ id: user.id, roleId: user.roleId, username: user.username, email: user.email });
         dispatch(setSession({ user, isAuthenticated: true }));
         startSessionScheduler();
         // Redirect deferred so Redux is committed; home page also redirects when isAuthenticated flips

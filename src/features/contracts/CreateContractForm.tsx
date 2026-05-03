@@ -232,7 +232,30 @@ export function CreateContractForm({
                 />
                 {accountLookup && (
                   <small className="text-muted d-block mt-1">
-                    {t('Customer')}: {accountLookup.customerName} · {accountLookup.displayName} ({accountLookup.accountType})
+                    <strong className="text-primary">{t('Customer')}:</strong>{' '}
+                    <span className="text-dark">
+                      {accountLookup.customerName || accountLookup.displayName || '—'}
+                    </span>
+                    {accountLookup.displayName &&
+                    accountLookup.customerName &&
+                    accountLookup.displayName !== accountLookup.customerName ? (
+                      <>
+                        <span className="text-muted"> · </span>
+                        <span className="text-dark">{accountLookup.displayName}</span>
+                      </>
+                    ) : null}
+                    {accountLookup.productName ? (
+                      <>
+                        <span className="text-muted"> · </span>
+                        <span className="text-muted">{accountLookup.productName}</span>
+                      </>
+                    ) : null}
+                    {accountLookup.accountStatus ? (
+                      <>
+                        <span className="text-muted"> · </span>
+                        <span className="fw-semibold text-primary">{accountLookup.accountStatus}</span>
+                      </>
+                    ) : null}
                   </small>
                 )}
                 {errors.customerId && (

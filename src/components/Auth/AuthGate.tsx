@@ -10,20 +10,25 @@ import { startSessionScheduler, stopSessionScheduler } from '@/lib/auth/session-
 import { decodeJwtPayload } from '@/lib/auth/jwt';
 
 const AUTH_USER_STORAGE_KEY = 'auth_user_snapshot';
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function getStoredUser(): { id: string; username?: string; email?: string } | null {
+function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID_REGEX.test(value.trim());
+}
+
+function getStoredUser(): { id: string; roleId?: string; username?: string; email?: string } | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = sessionStorage.getItem(AUTH_USER_STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as { id: string; username?: string; email?: string };
+    const parsed = JSON.parse(raw) as { id: string; roleId?: string; username?: string; email?: string };
     return parsed?.id ? parsed : null;
   } catch {
     return null;
   }
 }
 
-function setStoredUser(user: { id: string; username?: string; email?: string } | null): void {
+function setStoredUser(user: { id: string; roleId?: string; username?: string; email?: string } | null): void {
   if (typeof window === 'undefined') return;
   try {
     if (user) sessionStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
@@ -63,8 +68,9 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       if (pair) {
         const payload = decodeJwtPayload(pair.accessToken);
         const sub = payload?.sub;
-        const user = sub ? { id: sub, ...getStoredUser() } : getStoredUser();
-        const snapshot = user ?? (sub ? { id: sub } : null);
+        const storedUser = getStoredUser();
+        const user = storedUser ?? (isUuid(sub) ? { id: sub } : null);
+        const snapshot = user ?? null;
         if (snapshot) setStoredUser(snapshot);
         dispatch(setSession({ user: snapshot, isAuthenticated: true }));
         startSessionScheduler();
@@ -81,6 +87,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export function persistAuthUser(user: { id: string; username?: string; email?: string }): void {
+export function persistAuthUser(user: { id: string; roleId?: string; username?: string; email?: string }): void {
   setStoredUser(user);
 }
