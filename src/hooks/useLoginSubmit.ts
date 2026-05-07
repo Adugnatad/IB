@@ -7,7 +7,7 @@ import { setSession, requireOtp, setAuthError, clearAuthError } from '@/Redux/Sl
 import { tokenManager } from '@/lib/auth/token-manager';
 import { startSessionScheduler } from '@/lib/auth/session-scheduler';
 import { decodeJwtPayload } from '@/lib/auth/jwt';
-import { login, getAuthUserFromResponse } from '@/services/api/auth-api';
+import { login, getAuthUserFromResponse, type LoginResponse } from '@/services/api/auth-api';
 import { ApiError } from '@/services/api/client';
 import { getAuthErrorMessage } from '@/lib/auth/error-messages';
 import { persistAuthUser } from '@/components/Auth/AuthGate';

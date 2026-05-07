@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, ModalHeader, ModalBody, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type DefaultValues } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { AppLoader } from '@/Component/Loader';
 import { TOAST_AUTO_CLOSE_MS } from '@/CommonComponents/ToastProvider';
@@ -85,11 +85,12 @@ export function EditContractUserModal({
 
   const contractUserId = contractUser?.id?.trim() ?? '';
 
-  const defaultValues = useMemo((): EditContractUserFormValues => {
+  const defaultValues = useMemo((): DefaultValues<EditContractUserFormValues> => {
     const roleId = roleNameToContractRoleId(contractUser?.roleName);
     const genderRaw = typeof contractUser?.gender === 'string' ? contractUser.gender.trim() : '';
-    const gender =
-      genderRaw && GENDER_OPTIONS.includes(genderRaw as (typeof GENDER_OPTIONS)[number]) ? genderRaw : '';
+    const gender = GENDER_OPTIONS.includes(genderRaw as (typeof GENDER_OPTIONS)[number])
+      ? (genderRaw as (typeof GENDER_OPTIONS)[number])
+      : undefined;
     return {
       roleId: CONTRACT_ROLE_OPTIONS.some((r) => r.value === roleId) ? roleId : '',
       permissionType: defaultPermissionType(contractUser?.signatoryMetrics),

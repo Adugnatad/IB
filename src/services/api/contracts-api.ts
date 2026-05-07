@@ -28,7 +28,7 @@ const CONTRACTS_PATH = '/contracts';
 
 function buildQuery(params: ContractsListParams): string {
   const search = new URLSearchParams();
-  if (params.status != null && params.status !== '') {
+  if (params.status) {
     search.set('status', params.status);
   }
   // Only apply the active-only filter when explicitly enabled.

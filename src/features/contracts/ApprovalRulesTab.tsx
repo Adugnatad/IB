@@ -434,8 +434,8 @@ export function ApprovalRulesTab({ contractId, currentUserId }: ApprovalRulesTab
                 <Input
                   type="number"
                   step="any"
-                  value={bodyDraft.minAmount}
-                  onChange={(e) => setBodyDraft((b) => ({ ...b, minAmount: Number(e.target.value) }))}
+                  value={bodyDraft.minAmountStr}
+                  onChange={(e) => setBodyDraft((b) => ({ ...b, minAmountStr: e.target.value }))}
                   disabled={saveLoading}
                 />
               </FormGroup>

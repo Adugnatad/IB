@@ -17,7 +17,7 @@ import {
 } from '@/services/api/contracts-api';
 import { decodeJwtPayload } from '@/lib/auth/jwt';
 import { tokenManager } from '@/lib/auth/token-manager';
-import type { Contract } from '@/types/contracts';
+import type { Contract, ContractStatus } from '@/types/contracts';
 import type { ContractTableSortKey, SortDirection } from '@/types/contracts';
 import type { UpdateContractPayload } from '@/types/contracts';
 import type { CreateContractFormValues } from './validation';
@@ -88,7 +88,7 @@ export function ContractsTab() {
     setError(null);
     try {
       const params = {
-        status: filters.status || undefined,
+        status: (filters.status || undefined) as ContractStatus | undefined,
         activeOnly: filters.activeOnly,
       };
       const data = await fetchContracts(params);

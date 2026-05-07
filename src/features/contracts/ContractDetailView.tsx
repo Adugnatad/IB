@@ -485,7 +485,7 @@ export function ContractDetailView({ contractId }: ContractDetailViewProps) {
     const map = new Map(contractUsers.map((member) => [member.id, member]));
     return selectedMemberIds
       .map((id) => map.get(id))
-      .filter((member): member is { id: string; fullName: string; email: string } => Boolean(member));
+      .filter((member): member is { id: string; fullName: string; email: string; hasApprovalPermission: boolean } => Boolean(member));
   }, [contractUsers, selectedMemberIds]);
 
   const availableMembers = useMemo(
@@ -1022,7 +1022,7 @@ export function ContractDetailView({ contractId }: ContractDetailViewProps) {
                                           color="link"
                                           className="p-0 text-body contracts-contract-user-more"
                                           caret={false}
-                                          aria-haspopup="true"
+                                          aria-haspopup={true}
                                           aria-label={String(t('Open actions menu'))}
                                         >
                                           <MoreVertical size={16} aria-hidden />

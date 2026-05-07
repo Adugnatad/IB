@@ -111,7 +111,7 @@ export function getAuthUserFromResponse(
   const withId = [fromUser, fromDetails].find((u) => typeof u?.id === 'string' && u.id.trim().length > 0);
   if (withId) return withId;
 
-  const merged = ({ ...(fromUser ?? {}), ...(fromDetails ?? {}) } as AuthUser) ?? null;
+  const merged = { ...(fromUser ?? {}), ...(fromDetails ?? {}) } as AuthUser;
   const id = (merged?.id && String(merged.id).trim()) || (fallbackId ?? '').trim();
   if (!id) return null;
   const roleIdCandidate =

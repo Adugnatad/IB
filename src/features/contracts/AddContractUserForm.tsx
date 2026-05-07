@@ -3,7 +3,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardBody, CardHeader, Button, Form, FormGroup, Label, Input, Row, Col } from 'reactstrap';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type DefaultValues } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { AppLoader } from '@/Component/Loader';
 import { TOAST_AUTO_CLOSE_MS } from '@/CommonComponents/ToastProvider';
@@ -27,14 +27,14 @@ export interface AddContractUserFormProps {
   ) => Promise<void>;
 }
 
-const defaultValues: AddContractUserFormValues = {
+const defaultValues: DefaultValues<AddContractUserFormValues> = {
   roleId: '',
   permissionType: 'INITIATE',
   phone: '',
   email: '',
   firstName: '',
   lastName: '',
-  gender: '',
+  gender: undefined,
   dateOfBirth: '',
   addressLine1: '',
 };
