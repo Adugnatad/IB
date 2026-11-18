@@ -15,6 +15,8 @@ export interface UserFormCardProps {
   user?: AdminUser | null;
   roles: Role[];
   rolesLoading: boolean;
+  rolesError?: string | null;
+  rolesFromFallback?: boolean;
   submitLoading: boolean;
   onCancel: () => void;
   onSubmitCreate: (values: CreateUserFormValues) => Promise<void>;
@@ -36,6 +38,8 @@ export function UserFormCard({
   user,
   roles,
   rolesLoading,
+  rolesError,
+  rolesFromFallback,
   submitLoading,
   onCancel,
   onSubmitCreate,
@@ -199,9 +203,9 @@ export function UserFormCard({
                       disabled={submitLoading || rolesLoading}
                     >
                       <option value="">{t('Select role')}</option>
-                      {roles.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name}
+                      {roles.map((role) => (
+                        <option key={role.id} value={role.id} title={role.description}>
+                          {role.name}
                         </option>
                       ))}
                     </Input>
@@ -210,7 +214,10 @@ export function UserFormCard({
                 {rolesLoading && (
                   <small className="text-muted">{t('Loading roles...')}</small>
                 )}
-                {!rolesLoading && roles.length === 0 && (
+                {!rolesLoading && rolesError && (
+                  <small className={rolesFromFallback ? 'text-muted' : 'text-danger'}>{rolesError}</small>
+                )}
+                {!rolesLoading && !rolesError && roles.length === 0 && (
                   <small className="text-warning">{t('No roles available.')}</small>
                 )}
                 {errors.roleId && (

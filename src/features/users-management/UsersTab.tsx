@@ -27,6 +27,8 @@ export function UsersTab() {
   const [usersError, setUsersError] = useState<string | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
   const [rolesLoading, setRolesLoading] = useState(false);
+  const [rolesError, setRolesError] = useState<string | null>(null);
+  const [rolesFromFallback, setRolesFromFallback] = useState(false);
   const [sortKey, setSortKey] = useState<UserTableSortKey | null>(null);
   const [sortDir, setSortDir] = useState<SortDirection>('asc');
   const [filters, setFilters] = useState(defaultFilters);
@@ -57,18 +59,35 @@ export function UsersTab() {
 
   const loadRoles = useCallback(async () => {
     setRolesLoading(true);
+    setRolesError(null);
     try {
-      const data = await fetchRoles();
+      const { roles: data, fromFallback } = await fetchRoles();
       setRoles(data);
-    } catch {
+      setRolesFromFallback(fromFallback);
+      setRolesError(
+        fromFallback
+          ? t('Using default role list. Grant role:read on your account to load roles from the server.')
+          : null
+      );
+    } catch (err) {
+      const message = getErrorMessage(err);
       setRoles([]);
+      setRolesFromFallback(false);
+      setRolesError(message);
+      toast.error(message, { autoClose: TOAST_AUTO_CLOSE_MS });
     } finally {
       setRolesLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
-    if (showCreateForm || showEditForm) loadRoles();
+    void loadRoles();
+  }, [loadRoles]);
+
+  useEffect(() => {
+    if (showCreateForm || showEditForm) {
+      void loadRoles();
+    }
   }, [showCreateForm, showEditForm, loadRoles]);
 
   const handleSort = useCallback((key: UserTableSortKey) => {
@@ -162,6 +181,8 @@ export function UsersTab() {
           user={showEditForm ? selectedUser : undefined}
           roles={roles}
           rolesLoading={rolesLoading}
+          rolesError={rolesError}
+          rolesFromFallback={rolesFromFallback}
           submitLoading={submitLoading}
           onCancel={() => {
             setShowCreateForm(false);

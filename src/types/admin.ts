@@ -46,7 +46,7 @@ export interface Role {
   description?: string;
   roleType?: string;
   permissions?: RolePermission[];
-  active: boolean;
+  active?: boolean;
   systemRole?: boolean;
 }
 
