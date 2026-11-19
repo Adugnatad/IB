@@ -1,11 +1,10 @@
 /**
- * Token manager: coordinates storage and JWT expiry for session lifecycle.
- * Refresh tokens are single-use; after a successful refresh the new pair replaces the old.
+ * Token manager for the local demo session lifecycle.
  */
 import { tokenStorage } from './token-storage';
-import { getAccessTokenExpiryMs, isTokenExpiredOrExpiringSoon } from './jwt';
-import { getApiBaseUrl } from '@/config/env';
-import { AUTH_ENDPOINTS, TOKEN_CONFIG } from '@/config/env';
+import { decodeJwtPayload, getAccessTokenExpiryMs, isTokenExpiredOrExpiringSoon } from './jwt';
+import { TOKEN_CONFIG } from '@/config/env';
+import { createLocalTokenPair } from './local-token';
 
 export type TokenPair = { accessToken: string; refreshToken: string };
 
@@ -16,7 +15,7 @@ function clearTokens(): void {
 }
 
 /**
- * Persists new token pair after login or refresh. Caller must ensure refresh is single-use on backend.
+ * Persists the local demo token pair.
  */
 export function setTokenPair(pair: TokenPair): void {
   tokenStorage.setAccessToken(pair.accessToken);
@@ -52,8 +51,8 @@ export function shouldRefreshAccessToken(): boolean {
 }
 
 /**
- * Performs refresh token exchange. Single-use: backend invalidates previous refresh token.
- * Concurrent calls share one in-flight request to avoid race and multiple refresh use.
+ * Renews the local token without contacting a backend.
+ * Concurrent calls share one in-flight refresh.
  */
 export async function refreshTokens(): Promise<TokenPair | null> {
   const refreshToken = tokenStorage.getRefreshToken();
@@ -63,35 +62,21 @@ export async function refreshTokens(): Promise<TokenPair | null> {
     return refreshPromise;
   }
 
-  const base = getApiBaseUrl();
-  if (!base) return null;
-
   refreshPromise = (async (): Promise<TokenPair | null> => {
     try {
-      const res = await fetch(`${base}${AUTH_ENDPOINTS.REFRESH_TOKEN}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
+      const currentToken = tokenStorage.getAccessToken() ?? refreshToken;
+      const payload = currentToken ? decodeJwtPayload(currentToken) : null;
+      if (typeof payload?.sub !== 'string' || !payload.sub) {
+        clearTokens();
+        return null;
+      }
+
+      const pair = createLocalTokenPair({
+        id: payload.sub,
+        username: typeof payload.username === 'string' ? payload.username : undefined,
+        email: typeof payload.email === 'string' ? payload.email : undefined,
+        roleId: typeof payload.roleId === 'string' ? payload.roleId : undefined,
       });
-
-      if (!res.ok) {
-        clearTokens();
-        return null;
-      }
-
-      const data = (await res.json()) as { accessToken?: string; refreshToken?: string };
-      const accessToken = data?.accessToken;
-      const newRefreshToken = data?.refreshToken;
-
-      if (!accessToken || typeof accessToken !== 'string') {
-        clearTokens();
-        return null;
-      }
-
-      const pair: TokenPair = {
-        accessToken,
-        refreshToken: typeof newRefreshToken === 'string' ? newRefreshToken : refreshToken,
-      };
       setTokenPair(pair);
       return pair;
     } catch {

@@ -1,11 +1,8 @@
 /**
- * Global API client with session validation interceptor.
- * On 401: attempt silent refresh → retry original request once → if refresh fails, emit session invalid.
+ * Local-only API client. All feature services are handled by the browser demo store.
  */
-import { getApiBaseUrl, getContractsApiBaseUrl } from '@/config/env';
+import { handleLocalApiRequest, LocalApiError } from './local-api';
 import { tokenManager } from '@/lib/auth/token-manager';
-
-const DEFAULT_TIMEOUT_MS = 30000;
 
 export type SessionInvalidCallback = () => void;
 let sessionInvalidCallback: SessionInvalidCallback | null = null;
@@ -27,33 +24,12 @@ export interface RequestConfig extends RequestInit {
   useContractsBase?: boolean;
 }
 
-async function fetchWithTimeout(
-  url: string,
-  config: RequestConfig,
-  timeoutMs: number
-): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, {
-      ...config,
-      signal: config.signal ?? controller.signal,
-    });
-    return res;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
 /**
- * Builds full URL from path. Path must start with /.
- * When useContractsBase is true, uses base without /v1 (e.g. .../api instead of .../api/v1).
+ * Normalizes a local service path. No URL or backend configuration is required.
  */
-export function buildApiUrl(path: string, useContractsBase?: boolean): string {
-  const base = useContractsBase ? getContractsApiBaseUrl() : getApiBaseUrl();
-  if (!base) return '';
+export function buildApiUrl(path: string, _useContractsBase?: boolean): string {
   const normalized = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${normalized}`;
+  return normalized;
 }
 
 /**
@@ -63,34 +39,26 @@ export async function apiRequest<T = unknown>(
   path: string,
   config: RequestConfig = {}
 ): Promise<{ data: T; response: Response }> {
-  const { timeout = DEFAULT_TIMEOUT_MS, skipAuth = false, skipRefreshRetry = false, useContractsBase = false, ...init } = config;
-  const url = buildApiUrl(path, useContractsBase);
-  if (!url) {
-    throw new ApiError('API_BASE_URL is not configured', 'CONFIG_ERROR');
-  }
-
+  const { timeout: _timeout, skipAuth: _skipAuth, skipRefreshRetry: _skipRefreshRetry, useContractsBase: _useContractsBase, ...init } = config;
+  const url = buildApiUrl(path);
   const headers = new Headers(init.headers ?? {});
-  if (!skipAuth) {
-    const token = tokenManager.getAccessToken();
-    if (token) headers.set('Authorization', `Bearer ${token}`);
-  }
   if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
 
-  const firstRes = await fetchWithTimeout(url, { ...init, headers }, timeout);
-
-  if (firstRes.status !== 401 || skipAuth || skipRefreshRetry) {
-    return handleResponse<T>(path, firstRes, url, init, headers, timeout);
+  let result: { data: unknown; status: number };
+  try {
+    result = await handleLocalApiRequest(url, { ...init, headers });
+  } catch (error) {
+    if (error instanceof LocalApiError) {
+      throw new ApiError(error.message, error.code, error.status);
+    }
+    throw error;
   }
 
-  const newPair = await tokenManager.refreshTokens();
-  if (!newPair) {
-    notifySessionInvalid();
-    throw new ApiError('Session expired. Please sign in again.', 'UNAUTHORIZED');
-  }
-
-  headers.set('Authorization', `Bearer ${newPair.accessToken}`);
-  const retryRes = await fetchWithTimeout(url, { ...init, headers }, timeout);
-  return handleResponse<T>(path, retryRes, url, init, headers, timeout);
+  const response = new Response(JSON.stringify(result.data ?? null), {
+    status: result.status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return handleResponse<T>(path, response, url, init, headers, 0);
 }
 
 interface BackendErrorBody {

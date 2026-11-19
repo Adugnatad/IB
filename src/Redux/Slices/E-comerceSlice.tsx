@@ -1,11 +1,44 @@
-import { EccomInitialStateProps } from '@/Type/SideBarType';
+import { EccomInitialStateProps, ProductData } from '@/Type/SideBarType';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
-export const fetchProductData: any = createAsyncThunk('fetch/product', async () => {
-  const res = await fetch(`/api/E-CommerceApi`);
-  const result = await res.json();
-  return result;
-});
+const localProducts: ProductData[] = [
+  {
+    id: 1,
+    img: '/assets/images/ecommerce/product-table-1.png',
+    name: 'Demo Current Account',
+    note: 'Local demo item',
+    discription: 'Sample product for the local demo catalog.',
+    discountPrice: '0',
+    status: 'In Stock',
+    price: 0,
+    stock: '10',
+    review: '0',
+    category: 'Banking',
+    colors: [],
+    size: [],
+    tags: ['demo'],
+    variants: [],
+  },
+  {
+    id: 2,
+    img: '/assets/images/ecommerce/product-table-2.png',
+    name: 'Demo Savings Account',
+    note: 'Local demo item',
+    discription: 'Sample product for the local demo catalog.',
+    discountPrice: '0',
+    status: 'In Stock',
+    price: 0,
+    stock: '10',
+    review: '0',
+    category: 'Banking',
+    colors: [],
+    size: [],
+    tags: ['demo'],
+    variants: [],
+  },
+];
+
+export const fetchProductData = createAsyncThunk('fetch/product', async () => localProducts);
 
 const initialState: EccomInitialStateProps = {
   Data: [],
